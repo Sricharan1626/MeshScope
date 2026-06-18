@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research-Grade Mesh Network Visualizer & Analytics Suite</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js for scientific visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Custom scrollbar styling for technical dashboard look */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e1e24;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3f3f46;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #52525b;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="border-b border-zinc-800 bg-zinc-900/50 backdrop-blur px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="p-2 bg-indigo-600/10 text-indigo-400 rounded-lg border border-indigo-500/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          NetTopology <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full font-mono">v3.5 MultiShape</span>
+        </h1>
+        <p class="text-xs text-zinc-400">Research-Grade Mesh Network Visualizer & Adaptive Boundary Simulator</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button onclick="exportJSON()" class="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-900 text-zinc-200 text-sm font-medium rounded-lg border border-zinc-700 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+        Export JSON Data
+      </button>
+      <button onclick="compareAllTopologies()" class="flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-lg shadow-indigo-600/10 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+        </svg>
+        Run Cross-Topology Analysis
+      </button>
+    </div>
+  </header>
+
+  <!-- Viewport Scale Tabs switcher -->
+  <div class="px-6 pt-4 flex gap-2">
+    <button id="tab-local" onclick="setViewMode('local')" class="px-4 py-2 text-xs font-semibold rounded-lg border border-indigo-500/30 bg-indigo-600/15 text-indigo-400 transition flex items-center gap-1.5 shadow-md">
+      <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+      1. Local Micro-Topology Workspace
+    </button>
+    <button id="tab-forest" onclick="setViewMode('forest')" class="px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-800 bg-zinc-900/30 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+      2. 1000 km² Forest Macro-Grid Simulator
+    </button>
+  </div>
+
+  <!-- App Body Layout -->
+  <div class="flex-1 grid grid-cols-1 xl:grid-cols-12 gap-6 p-6">
+    
+    <!-- Left Column: Controls and Single Topology Insights -->
+    <div class="xl:col-span-4 flex flex-col gap-6">
+      
+      <!-- Network Parameters Form -->
+      <section class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
+          <h2 class="text-sm font-semibold text-zinc-200 tracking-wider uppercase flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            Simulation Parameters
+          </h2>
+          <span class="text-xs text-zinc-500" id="param-sub-header">Local Node Config</span>
+        </div>
+        
+        <div class="space-y-4">
+          <!-- Topology Selector -->
+          <div id="ctrl-topology">
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1.5" for="topology">Selected Topology</label>
+            <select id="topology" onchange="generateNetwork()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500 transition">
+              <option value="Circle">Circle Lattice Grid</option>
+              <option value="Square">Square Cartesian Grid</option>
+              <option value="Hexagon">Hexagonal Honeycomb Grid</option>
+              <option value="Triangle">Triangular Mesh Grid</option>
+              <option value="Star">Star-Spoke Network</option>
+              <option value="Random">Poisson Random Geometric</option>
+              <option value="ScaleFree">Scale-Free (Barabási-Albert)</option>
+            </select>
+          </div>
+
+          <!-- Background Boundary Shape Selector -->
+          <div id="ctrl-boundary">
+            <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1.5" for="boundaryShape">Boundary Shape</label>
+            <select id="boundaryShape" onchange="generateNetwork()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500 transition">
+              <option value="Circle">Circular Area (Standard)</option>
+              <option value="Square">Square Boundary Grid</option>
+              <option value="Hexagon">Hexagonal Perimeter</option>
+              <option value="Triangle">Triangular Sector</option>
+              <option value="Irregular">Irregular Forest Boundary</option>
+            </select>
+          </div>
+
+          <!-- Slider Controls Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium text-zinc-400" id="radiusLabel">Radius Boundary</span>
+                <span class="font-mono text-indigo-400" id="radiusVal">15 km</span>
+              </div>
+              <input id="radius" type="range" min="5" max="80" value="15" step="1" oninput="updateVal('radius', 'km'); generateNetwork();" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+            </div>
+            
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium text-zinc-400">TX Range (Threshold)</span>
+                <span class="font-mono text-indigo-400" id="rangeVal">8 km</span>
+              </div>
+              <input id="range" type="range" min="3" max="15" value="8" step="0.5" oninput="updateVal('range', 'km'); generateNetwork();" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500">
+            </div>
+          </div>
+
+          <!-- Forest Specific Inputs -->
+          <div id="forest-specific-controls" class="hidden space-y-4 pt-2 border-t border-zinc-800">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-medium text-emerald-400">Target Forest Area</span>
+                <span class="font-mono text-emerald-400" id="forestAreaVal">1000 km²</span>
+              </div>
+              <input id="forestArea" type="range" min="100" max="2500" value="1000" step="50" oninput="updateVal('forestArea', 'km²'); generateNetwork();" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1.5">Tiling Strategy</label>
+              <select id="tilingStrategy" onchange="generateNetwork()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500 transition">
+                <option value="hexagonal">Hexagonal Cellular Packing (Optimal)</option>
+                <option value="grid">Square Grid Packing</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Failure Simulators -->
+          <div class="p-3 bg-zinc-950/60 border border-zinc-800/80 rounded-lg">
+            <div class="flex justify-between text-xs mb-1.5">
+              <span class="font-medium text-red-400 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+                <span id="failLabel">Simulated Node Failures</span>
+              </span>
+              <span class="font-mono text-red-400" id="failuresVal">0</span>
+            </div>
+            <input id="failures" type="range" min="0" max="60" value="0" step="1" oninput="updateVal('failures', ''); generateNetwork();" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-red-500">
+            <p class="text-[10px] text-zinc-500 mt-1" id="failDescription">Randomly eliminates local node units to calculate connectivity breakdowns.</p>
+          </div>
+          
+          <div class="flex gap-2">
+            <button onclick="triggerQuickFailure()" class="flex-1 py-2 bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 hover:border-red-800/40 text-red-400 text-xs font-semibold rounded-lg transition">
+              Fail 5 Random
+            </button>
+            <button onclick="resetFailures()" class="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg transition">
+              Repair Network
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Real-Time Selected Network Analytics -->
+      <section class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm flex-1 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
+            <h2 class="text-sm font-semibold text-zinc-200 tracking-wider uppercase flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              Live Analytical Metrics
+            </h2>
+            <span class="text-xs text-zinc-500" id="analysis-type-header">Micro Scale</span>
+          </div>
+
+          <!-- Dynamic Panel switching between micro and macro metrics -->
+          <div class="space-y-4" id="metricsDisplay">
+            <div class="grid grid-cols-2 gap-4" id="micro-metrics-grid">
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Total Active Nodes</p>
+                <p class="text-xl font-bold font-mono mt-0.5" id="metric-nodes">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Active Link Edges</p>
+                <p class="text-xl font-bold font-mono mt-0.5" id="metric-links">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Network Diameter</p>
+                <p class="text-xl font-bold font-mono mt-0.5 text-amber-400" id="metric-diameter">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Average Hop Count</p>
+                <p class="text-xl font-bold font-mono mt-0.5 text-indigo-400" id="metric-avg-hops">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Max Geo Span</p>
+                <p class="text-xl font-bold font-mono mt-0.5 text-purple-400" id="metric-max-dist">0 km</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Partition Resilience</p>
+                <p class="text-xl font-bold font-mono mt-0.5 text-emerald-400" id="metric-resilience">0%</p>
+              </div>
+            </div>
+
+            <!-- Forest Macro-scale metrics dashboard -->
+            <div class="grid grid-cols-2 gap-4 hidden" id="forest-metrics-grid">
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60 col-span-2">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Sub-Network Clusters Required</p>
+                <p class="text-2xl font-bold font-mono text-emerald-400 mt-0.5" id="forest-metric-clusters">0</p>
+                <p class="text-[10px] text-zinc-500 mt-0.5" id="forest-metric-overlap-warning">0% geometric boundary overlap</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Est. Total Sensors</p>
+                <p class="text-lg font-bold font-mono mt-0.5 text-zinc-100" id="forest-metric-total-nodes">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Uplink Gateway Nodes</p>
+                <p class="text-lg font-bold font-mono mt-0.5 text-indigo-400" id="forest-metric-gateways">0</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">Backhaul Span</p>
+                <p class="text-lg font-bold font-mono mt-0.5 text-purple-400" id="forest-metric-backhaul">0 km</p>
+              </div>
+              <div class="bg-zinc-950 p-3 rounded-lg border border-zinc-800/60">
+                <p class="text-[11px] text-zinc-500 uppercase tracking-wider">System Est. Cost</p>
+                <p class="text-lg font-bold font-mono mt-0.5 text-yellow-400" id="forest-metric-cost">$0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-zinc-800/60 text-xs text-zinc-400 space-y-2">
+          <div id="legend-local">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-600 block"></span>
+              <span>Red Node: Root Gateway (ID: 0)</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 block"></span>
+              <span>Blue Nodes: Active Mesh Transceivers</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 leading-relaxed italic mt-2">
+              * <b>Resilience Index</b> computed dynamically as the percentage size of the primary connected components post-damage.
+            </p>
+          </div>
+          
+          <div id="legend-forest" class="hidden">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 block border border-indigo-400"></span>
+              <span>Sub-network Cluster Coverage Circle</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 block"></span>
+              <span>Gateway Hub / Inter-gateway Backbone Links</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 block animate-pulse"></span>
+              <span>Main Regional Backhaul / Base Uplink</span>
+            </div>
+            <p class="text-[11px] text-zinc-500 leading-relaxed italic mt-2">
+              * Tiled according to selected algorithm to fully cover the specified forest footprint with minimal redundancy.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Canvas Preview, Live Simulator, and Cross-Topology Evaluation Engine -->
+    <div class="xl:col-span-8 flex flex-col gap-6">
+      
+      <!-- Visualization Canvas Workspace -->
+      <section class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-2 border-b border-zinc-800">
+          <div>
+            <h2 id="viewport-title" class="text-sm font-semibold text-zinc-200 tracking-wider uppercase flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+              </svg>
+              Live Topographic Viewport
+            </h2>
+            <p id="viewport-desc" class="text-xs text-zinc-500">Interactive Canvas • Drag parameters or click Nodes to calculate exact paths to Root Gateway</p>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-zinc-400 bg-zinc-950 px-2.5 py-1 rounded-md border border-zinc-800" id="interactive-path-display">
+              Target Node: Click node below to find path
+            </span>
+            <button onclick="resetSelectedPath()" class="text-xs bg-zinc-800 hover:bg-zinc-700 hover:text-white px-2.5 py-1 rounded transition text-zinc-400">
+              Reset Path
+            </button>
+          </div>
+        </div>
+
+        <div class="relative w-full flex items-center justify-center bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800">
+          <canvas id="canvas" class="block w-full max-w-full aspect-[4/3] max-h-[500px] cursor-crosshair"></canvas>
+          
+          <!-- Loading overlay -->
+          <div id="canvas-loading" class="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm hidden items-center justify-center flex-col gap-3">
+            <div class="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
+            <p class="text-xs font-semibold text-indigo-400 tracking-wider uppercase">Regenerating Network Layout...</p>
+          </div>
+        </div>
+        
+        <div class="mt-3 flex flex-wrap items-center justify-between text-xs text-zinc-500 gap-2">
+          <span id="interactive-tip">💡 Hover over nodes to see IDs. Click any node to instantly trace its shortest routing path back to the central gateway (red).</span>
+          <span class="font-mono text-[11px] bg-zinc-950 border border-zinc-800 px-2 py-0.5 rounded" id="scale-indicator">Scale Factor: 10px = 1km</span>
+        </div>
+      </section>
+
+      <!-- Advanced Multi-Topology Evaluation Section -->
+      <section id="comparison-section" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-2 border-b border-zinc-800">
+          <div>
+            <h2 class="text-sm font-semibold text-zinc-200 tracking-wider uppercase flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+              </svg>
+              Automated Comparative Analysis Matrix
+            </h2>
+            <p class="text-xs text-zinc-500">Cross-evaluates all 7 topology models at identical metrics to recommend optimal architectures</p>
+          </div>
+          
+          <button onclick="compareAllTopologies()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+            Recalculate Model Comparison
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Analytical Comparison Charts -->
+          <div class="lg:col-span-5 flex flex-col justify-center min-h-[250px] bg-zinc-950/40 p-4 border border-zinc-800/60 rounded-xl">
+            <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3 text-center">Score distribution &amp; Hop Efficiency</h3>
+            <div class="relative w-full h-[220px]">
+              <canvas id="comparisonChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Comparison Table & Recommended Leader -->
+          <div class="lg:col-span-7 flex flex-col justify-between">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-zinc-300">
+                <thead class="bg-zinc-950 border-b border-zinc-800 text-[10px] text-zinc-500 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-2.5">Topology</th>
+                    <th class="p-2.5 text-center">Nodes</th>
+                    <th class="p-2.5 text-center">Links</th>
+                    <th class="p-2.5 text-center">Avg Hops</th>
+                    <th class="p-2.5 text-center">Diameter</th>
+                    <th class="p-2.5 text-center">Resilience</th>
+                    <th class="p-2.5 text-right font-semibold text-indigo-400">Score</th>
+                  </tr>
+                </thead>
+                <tbody id="comparisonTableBody" class="divide-y divide-zinc-800/50 font-mono">
+                  <tr>
+                    <td colspan="7" class="p-6 text-center text-zinc-500 font-sans">
+                      Run "Cross-Topology Analysis" above to analyze and rank network properties.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Recommendation Alert Card -->
+            <div id="recommendationCard" class="mt-4 p-4 bg-indigo-950/20 border border-indigo-900/30 rounded-lg flex items-start gap-3 hidden">
+              <div class="p-2 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-indigo-300 uppercase tracking-wider">Optimal Recommendation</p>
+                <p class="text-xs text-zinc-300 mt-1" id="recommendationText">
+                  No recommendation compiled yet. Run the analysis engine.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- Footer Info / Custom Dialogs -->
+  <footer class="border-t border-zinc-800 bg-zinc-950 px-6 py-4 flex items-center justify-between text-xs text-zinc-500">
+    <p>© 2026 NetTopology Science Labs. Open source educational license.</p>
+    <div class="flex gap-4">
+      <a href="#" onclick="alertDetails()" class="hover:text-zinc-300 cursor-pointer">Analytical Definitions</a>
+      <span class="text-zinc-700">|</span>
+      <a href="#" class="hover:text-zinc-300 cursor-pointer" onclick="alertJSONFormat()">JSON Export Schema</a>
+    </div>
+  </footer>
+
+  <!-- Custom Alert Modals (No Browser Alerts Allowed) -->
+  <div id="custom-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-[100] hidden items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-lg w-full shadow-2xl">
+      <h3 id="modal-title" class="text-base font-bold text-white uppercase tracking-wider mb-2">Technical Insight</h3>
+      <div id="modal-content" class="text-zinc-300 text-xs leading-relaxed space-y-3">
+        <!-- Filled dynamically -->
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition">
+          Dismiss Window
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification System -->
+  <div id="notification-toast" class="fixed bottom-6 right-6 px-4 py-3 bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-medium rounded-lg shadow-2xl translate-y-24 transition-transform duration-300 ease-out flex items-center gap-2.5 z-50">
+    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+    <span id="toast-message">Operation successful!</span>
+  </div>
+
+  <script>
+    // Global App Constants & States
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const scale = 10; // Scaling: 10 pixels = 1 km
+
+    // Dynamic state management
+    let networkNodes = [];
+    let networkLinks = [];
+    let activePath = [];
+    let selectedTargetNodeId = null;
+    let comparisonDataCache = {};
+    let comparisonChartInstance = null;
+    
+    // View state
+    let viewMode = 'local'; // 'local' or 'forest'
+
+    // Core Parameters
+    const params = {
+      topology: "Circle",
+      boundaryShape: "Circle",
+      radius: 15,
+      range: 8,
+      failures: 0,
+      forestArea: 1000,
+      tilingStrategy: "hexagonal"
+    };
+
+    // Helper functions for updating parameter displays
+    function updateVal(id, suffix) {
+      const val = document.getElementById(id).value;
+      params[id] = Number(val);
+      document.getElementById(`${id}Val`).innerText = `${val} ${suffix}`.trim();
+    }
+
+    // Toggle multi-scale tabs
+    function setViewMode(mode) {
+      viewMode = mode;
+      
+      const tabLocal = document.getElementById("tab-local");
+      const tabForest = document.getElementById("tab-forest");
+      const forestControls = document.getElementById("forest-specific-controls");
+      const ctrlTopology = document.getElementById("ctrl-topology");
+      const ctrlBoundary = document.getElementById("ctrl-boundary");
+      
+      const microMetrics = document.getElementById("micro-metrics-grid");
+      const forestMetrics = document.getElementById("forest-metrics-grid");
+      const legendLocal = document.getElementById("legend-local");
+      const legendForest = document.getElementById("legend-forest");
+      
+      const comparisonSection = document.getElementById("comparison-section");
+      
+      const viewTitle = document.getElementById("viewport-title");
+      const viewDesc = document.getElementById("viewport-desc");
+      const pathDisplay = document.getElementById("interactive-path-display");
+      const scaleIndicator = document.getElementById("scale-indicator");
+      const interactiveTip = document.getElementById("interactive-tip");
+      const radiusLabel = document.getElementById("radiusLabel");
+
+      if (mode === 'local') {
+        // Tab UI styling
+        tabLocal.className = "px-4 py-2 text-xs font-semibold rounded-lg border border-indigo-500/30 bg-indigo-600/15 text-indigo-400 transition flex items-center gap-1.5 shadow-md";
+        tabForest.className = "px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-800 bg-zinc-900/30 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5";
+        
+        // Hide/Show Left control items
+        forestControls.classList.add("hidden");
+        ctrlTopology.classList.remove("hidden");
+        ctrlBoundary.classList.remove("hidden");
+        
+        // Metrics panels toggle
+        microMetrics.classList.remove("hidden");
+        forestMetrics.classList.add("hidden");
+        legendLocal.classList.remove("hidden");
+        legendForest.classList.add("hidden");
+        
+        // Show compare matrix
+        comparisonSection.classList.remove("hidden");
+
+        // Viewport Header Text
+        viewTitle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg> Live Local Topographic Viewport`;
+        viewDesc.innerText = "Interactive Canvas • Drag parameters or click Nodes to calculate exact paths to Root Gateway";
+        interactiveTip.innerText = "💡 Hover over nodes to see IDs. Click any node to instantly trace its shortest routing path back to the central gateway (red).";
+        scaleIndicator.innerText = "Scale Factor: 10px = 1km";
+        radiusLabel.innerText = "Radius Boundary";
+        
+        document.getElementById("param-sub-header").innerText = "Local Node Config";
+        document.getElementById("analysis-type-header").innerText = "Micro Scale";
+        document.getElementById("failLabel").innerText = "Simulated Node Failures";
+        document.getElementById("failDescription").innerText = "Randomly eliminates local node units to calculate connectivity breakdowns.";
+
+        resetSelectedPath();
+      } else {
+        // Forest tab styling
+        tabLocal.className = "px-4 py-2 text-xs font-semibold rounded-lg border border-zinc-800 bg-zinc-900/30 text-zinc-400 hover:text-zinc-200 transition flex items-center gap-1.5";
+        tabForest.className = "px-4 py-2 text-xs font-semibold rounded-lg border border-emerald-500/30 bg-emerald-600/15 text-emerald-400 transition flex items-center gap-1.5 shadow-md";
+        
+        // Hide/Show Left control items
+        forestControls.classList.remove("hidden");
+        ctrlTopology.classList.add("hidden");
+        ctrlBoundary.classList.add("hidden");
+
+        // Metrics panels toggle
+        microMetrics.classList.add("hidden");
+        forestMetrics.classList.remove("hidden");
+        legendLocal.classList.add("hidden");
+        legendForest.classList.remove("hidden");
+        
+        // Hide compare matrix (since forest represents total deployment of multi-clusters)
+        comparisonSection.classList.add("hidden");
+
+        // Viewport Header Text
+        viewTitle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 10a2 2 0 012-2h4a2 2 0 012 2v2a2 2 0 01-2 2H8a2 2 0 01-2-2v-2z" clip-rule="evenodd" /><path d="M9 9a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 00-1-1H9z" /></svg> 1000 km² Forest Macro-Grid Simulator`;
+        viewDesc.innerText = "Macro Coverage Overview • Calculates necessary clusters and shows backhaul link grid across total forest territory";
+        interactiveTip.innerText = "💡 Displays hexagonal packing layout. Each cell coverage circle represents a fully functional localized mesh node topology.";
+        scaleIndicator.innerText = "Macro Scale Factor: 1px = 0.1km";
+        radiusLabel.innerText = "Local Cluster Radius";
+
+        document.getElementById("param-sub-header").innerText = "Macro-scale Forest Config";
+        document.getElementById("analysis-type-header").innerText = "Macro Scale (Forest)";
+        document.getElementById("failLabel").innerText = "Gateway Connection Failures";
+        document.getElementById("failDescription").innerText = "Simulates high-strength regional interference disabling percentage of cluster transceivers.";
+
+        pathDisplay.innerText = "Target Node: Visualizing cellular packing";
+      }
+
+      generateNetwork();
+    }
+
+    // Modal Control
+    function showModal(title, contentHTML) {
+      document.getElementById("modal-title").innerHTML = title;
+      document.getElementById("modal-content").innerHTML = contentHTML;
+      document.getElementById("custom-modal").classList.remove("hidden");
+      document.getElementById("custom-modal").classList.add("flex");
+    }
+
+    // Helper: Mathematical checks for customizable node placement within different geometric perimeters
+    function isWithinBoundary(x, y, shape, radius) {
+      if (shape === "Circle") {
+        return Math.hypot(x, y) <= radius;
+      } else if (shape === "Square") {
+        return Math.abs(x) <= radius && Math.abs(y) <= radius;
+      } else if (shape === "Hexagon") {
+        // Flat-topped hexagon bound check correctly oriented to coordinate bounds
+        const h = radius * 0.866;
+        return Math.abs(y) <= h && (Math.abs(x) * 0.866 + Math.abs(y) * 0.5) <= h;
+      } else if (shape === "Triangle") {
+        // Equilateral triangle centered at (0,0) (Y goes downwards on screen)
+        // Top vertex is at relative y = -radius
+        // Bottom base is at relative y = radius * 0.5
+        const minY = -radius;
+        const maxY = radius * 0.5;
+        if (y < minY || y > maxY) return false;
+        const halfWidthAtY = (radius + y) / Math.sqrt(3);
+        return Math.abs(x) <= halfWidthAtY;
+      } else if (shape === "Irregular") {
+        // Multi-lobe organic forest contour mapping
+        const angle = Math.atan2(y, x);
+        const rBound = radius * (1 + 0.25 * Math.cos(5 * angle) + 0.1 * Math.sin(3 * angle));
+        return Math.hypot(x, y) <= rBound;
+      }
+      return Math.hypot(x, y) <= radius;
+    }
+
+    // Helper: Draw boundary perimeter paths on the HTML Canvas
+    function drawBoundaryPath(ctx, cx, cy, shape, radiusPx) {
+      ctx.beginPath();
+      if (shape === "Circle") {
+        ctx.arc(cx, cy, radiusPx, 0, Math.PI * 2);
+      } else if (shape === "Square") {
+        ctx.rect(cx - radiusPx, cy - radiusPx, radiusPx * 2, radiusPx * 2);
+      } else if (shape === "Hexagon") {
+        for (let i = 0; i < 6; i++) {
+          let angle = (i * Math.PI) / 3;
+          let px = cx + radiusPx * Math.cos(angle);
+          let py = cy + radiusPx * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      } else if (shape === "Triangle") {
+        const rTop = radiusPx;
+        const rBottom = radiusPx * 0.5;
+        const halfW = radiusPx * Math.sqrt(3) * 0.5;
+        ctx.moveTo(cx, cy - rTop);
+        ctx.lineTo(cx + halfW, cy + rBottom);
+        ctx.lineTo(cx - halfW, cy + rBottom);
+        ctx.closePath();
+      } else if (shape === "Irregular") {
+        for (let i = 0; i < 360; i += 2) {
+          let angle = (i * Math.PI) / 180;
+          let rBound = radiusPx * (1 + 0.25 * Math.cos(5 * angle) + 0.1 * Math.sin(3 * angle));
+          let px = cx + rBound * Math.cos(angle);
+          let py = cy + rBound * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("custom-modal").classList.add("hidden");
+      document.getElementById("custom-modal").classList.remove("flex");
+    }
+
+    // Toast notifications
+    function triggerToast(message) {
+      const toast = document.getElementById("notification-toast");
+      document.getElementById("toast-message").innerText = message;
+      toast.classList.remove("translate-y-24");
+      setTimeout(() => {
+        toast.classList.add("translate-y-24");
+      }, 3000);
+    }
+
+    // Distance metric
+    function getDistance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    // Topology algorithms wrapper conforming to any chosen physical boundary shape
+    function getGeneratedLayout(topologyType, boundaryShape, radiusValue, rangeValue, failuresCount) {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      let nodes = [{ x: cx, y: cy, id: 0 }]; // Always add root gateway
+      let nextId = 1;
+
+      const addNode = (x, y) => {
+        nodes.push({ x, y, id: nextId++ });
+      };
+
+      // 1. Concentric Circle Layout
+      if (topologyType === "Circle") {
+        for (let r = rangeValue; r <= radiusValue * 1.5; r += rangeValue * 0.95) {
+          const densityMultiplier = 1.6;
+          let n = Math.max(6, Math.ceil((2 * Math.PI * r) / (rangeValue / densityMultiplier)));
+          for (let i = 0; i < n; i++) {
+            let angle = (2 * Math.PI * i) / n;
+            let dx = r * Math.cos(angle);
+            let dy = r * Math.sin(angle);
+            if (isWithinBoundary(dx, dy, boundaryShape, radiusValue)) {
+              addNode(cx + dx * scale, cy + dy * scale);
+            }
+          }
+        }
+      }
+
+      // 2. Square Cartesian Lattice
+      else if (topologyType === "Square") {
+        const step = rangeValue * 0.95;
+        const maxLimit = radiusValue * 1.5;
+        for (let x = -maxLimit; x <= maxLimit; x += step) {
+          for (let y = -maxLimit; y <= maxLimit; y += step) {
+            if (isWithinBoundary(x, y, boundaryShape, radiusValue)) {
+              if (Math.hypot(x, y) > 0.5) {
+                addNode(cx + x * scale, cy + y * scale);
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Hexagonal Honeycomb Grid
+      else if (topologyType === "Hexagon") {
+        const hexRadius = rangeValue * 0.58; 
+        const hSpace = Math.sqrt(3) * hexRadius;
+        const vSpace = 1.5 * hexRadius;
+        const maxLayer = Math.ceil((radiusValue * 1.5) / vSpace);
+        
+        for (let r = -maxLayer; r <= maxLayer; r++) {
+          for (let q = -maxLayer; q <= maxLayer; q++) {
+            let x = hSpace * (q + r / 2);
+            let y = vSpace * r;
+            if (isWithinBoundary(x, y, boundaryShape, radiusValue)) {
+              if (Math.hypot(x, y) > 0.1) {
+                addNode(cx + x * scale, cy + y * scale);
+              }
+            }
+          }
+        }
+      }
+
+      // 4. Triangular Mesh Grid
+      else if (topologyType === "Triangle") {
+        const step = rangeValue * 0.9;
+        const maxLimit = radiusValue * 1.5;
+        const rows = Math.ceil(maxLimit / step);
+        for (let r = -rows; r <= rows; r++) {
+          for (let c = -rows; c <= rows; c++) {
+            let x = (c + (r % 2 === 0 ? 0 : 0.5)) * step;
+            let y = r * 0.866 * step;
+            if (isWithinBoundary(x, y, boundaryShape, radiusValue)) {
+              if (Math.hypot(x, y) > 0.1) {
+                addNode(cx + x * scale, cy + y * scale);
+              }
+            }
+          }
+        }
+      }
+
+      // 5. Star-Spoke Network
+      else if (topologyType === "Star") {
+        const spokeDegrees = 12;
+        for (let angleDeg = 0; angleDeg < 360; angleDeg += 360 / spokeDegrees) {
+          let rad = (angleDeg * Math.PI) / 180;
+          for (let r = rangeValue; r <= radiusValue * 1.5; r += rangeValue * 0.9) {
+            let dx = r * Math.cos(rad);
+            let dy = r * Math.sin(rad);
+            if (isWithinBoundary(dx, dy, boundaryShape, radiusValue)) {
+              addNode(cx + dx * scale, cy + dy * scale);
+            }
+          }
+        }
+      }
+
+      // 6. Poisson Random Geometric Layout
+      else if (topologyType === "Random") {
+        const targetNodesCount = Math.min(100, Math.ceil((Math.PI * radiusValue * radiusValue) / (rangeValue * 1.5)));
+        let attempts = 0;
+        while (nodes.length < targetNodesCount && attempts < 1500) {
+          attempts++;
+          let rx = (Math.random() * 2 - 1) * radiusValue * 1.5;
+          let ry = (Math.random() * 2 - 1) * radiusValue * 1.5;
+          
+          if (isWithinBoundary(rx, ry, boundaryShape, radiusValue)) {
+            let nx = cx + rx * scale;
+            let ny = cy + ry * scale;
+            let tooClose = false;
+            for (let node of nodes) {
+              if (Math.hypot(node.x - nx, node.y - ny) < scale * 2) {
+                tooClose = true;
+                break;
+              }
+            }
+            if (!tooClose) {
+              addNode(nx, ny);
+            }
+          }
+        }
+      }
+
+      // 7. Scale-Free (Barabási-Albert model) Pref attachment (Crash-Proof Boundary Checker)
+      else if (topologyType === "ScaleFree") {
+        const centerDistance = rangeValue * scale * 0.5;
+        addNode(cx - centerDistance, cy + centerDistance);
+        addNode(cx + centerDistance, cy + centerDistance);
+        
+        const targetTotalNodes = 60;
+        let degrees = { 0: 2, 1: 1, 2: 1 };
+        let nodesCount = 3;
+        let attempts = 0;
+
+        while (nodesCount < targetTotalNodes && attempts < 1500) {
+          attempts++;
+          let totalDegree = Object.values(degrees).reduce((a, b) => a + b, 0);
+          let r = Math.random() * totalDegree;
+          let selectedParentId = 0;
+          let accum = 0;
+          
+          for (let idKey in degrees) {
+            accum += degrees[idKey];
+            if (r <= accum) {
+              selectedParentId = Number(idKey);
+              break;
+            }
+          }
+
+          let parentNode = nodes.find(n => n.id === selectedParentId);
+          if (!parentNode) parentNode = nodes[0];
+          
+          let spawnAngle = Math.random() * Math.PI * 2;
+          let spawnRadius = (0.5 + Math.random() * 0.45) * rangeValue * scale;
+          let nx = parentNode.x + spawnRadius * Math.cos(spawnAngle);
+          let ny = parentNode.y + spawnRadius * Math.sin(spawnAngle);
+
+          let relativeX = (nx - cx) / scale;
+          let relativeY = (ny - cy) / scale;
+
+          if (isWithinBoundary(relativeX, relativeY, boundaryShape, radiusValue)) {
+            const newId = nextId++;
+            nodes.push({ x: nx, y: ny, id: newId });
+            degrees[newId] = 1;
+            degrees[selectedParentId]++;
+            nodesCount++;
+          }
+        }
+      }
+
+      // Simulate Cascade Node Failures (delete from end, preserve root node 0)
+      let failuresTriggered = Math.min(failuresCount, nodes.length - 1);
+      let seededRandom = (function() {
+        let seed = 42;
+        return function() {
+          let x = Math.sin(seed++) * 10000;
+          return x - Math.floor(x);
+        };
+      })();
+
+      for (let f = 0; f < failuresTriggered; f++) {
+        let indexToRemove = 1 + Math.floor(seededRandom() * (nodes.length - 1));
+        nodes.splice(indexToRemove, 1);
+      }
+
+      // Generate transponder links based on direct transmission radius
+      let links = [];
+      const linkThreshold = rangeValue * scale * 1.05; 
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          if (getDistance(nodes[i], nodes[j]) <= linkThreshold) {
+            links.push([i, j]);
+          }
+        }
+      }
+
+      return { nodes, links };
+    }
+
+    // Build path adjacency lists & perform graph analytics (DFS/BFS)
+    function analyzeGraphStructure(nodes, links) {
+      let adjacencyList = {};
+      nodes.forEach(n => {
+        adjacencyList[n.id] = [];
+      });
+      links.forEach(([i, j]) => {
+        if (!nodes[i] || !nodes[j]) return;
+        const u = nodes[i].id;
+        const v = nodes[j].id;
+        adjacencyList[u].push(v);
+        adjacencyList[v].push(u);
+      });
+
+      // 1. Reachability & Path-finding to Gateway (Node 0)
+      let parentTracker = {};
+      let distances = {};
+      let visited = {};
+      let queue = [0];
+      visited[0] = true;
+      distances[0] = 0;
+
+      while (queue.length > 0) {
+        let current = queue.shift();
+        if (adjacencyList[current]) {
+          for (let neighbor of adjacencyList[current]) {
+            if (!visited[neighbor]) {
+              visited[neighbor] = true;
+              parentTracker[neighbor] = current;
+              distances[neighbor] = distances[current] + 1;
+              queue.push(neighbor);
+            }
+          }
+        }
+      }
+
+      // 2. Compute Connected Components (Resilience Indexing)
+      let ccVisited = {};
+      let componentSizes = [];
+      nodes.forEach(n => {
+        if (!ccVisited[n.id]) {
+          let compSize = 0;
+          let ccQueue = [n.id];
+          ccVisited[n.id] = true;
+          while (ccQueue.length > 0) {
+            let u = ccQueue.shift();
+            compSize++;
+            if (adjacencyList[u]) {
+              for (let v of adjacencyList[u]) {
+                if (!ccVisited[v]) {
+                  ccVisited[v] = true;
+                  ccQueue.push(v);
+                }
+              }
+            }
+          }
+          componentSizes.push(compSize);
+        }
+      });
+
+      const maxCcSize = componentSizes.length > 0 ? Math.max(...componentSizes) : 0;
+      const resiliencePercentage = nodes.length > 0 ? (maxCcSize / nodes.length) * 100 : 0;
+
+      // 3. Network Diameter & All-pairs shortest path calculations
+      let maxShortestPathHops = 0;
+      let totalPathHops = 0;
+      let calculatedPathCount = 0;
+
+      nodes.forEach(startNode => {
+        let bfsDist = {};
+        let q = [startNode.id];
+        bfsDist[startNode.id] = 0;
+        while (q.length > 0) {
+          let curr = q.shift();
+          if (adjacencyList[curr]) {
+            for (let neighbor of adjacencyList[curr]) {
+              if (bfsDist[neighbor] === undefined) {
+                bfsDist[neighbor] = bfsDist[curr] + 1;
+                q.push(neighbor);
+                totalPathHops += bfsDist[neighbor];
+                calculatedPathCount++;
+                if (bfsDist[neighbor] > maxShortestPathHops) {
+                  maxShortestPathHops = bfsDist[neighbor];
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const averageHops = calculatedPathCount > 0 ? (totalPathHops / calculatedPathCount).toFixed(2) : 0;
+
+      // 4. Max Geographic distance between nodes
+      let maxGeoDistance = 0;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          let d = getDistance(nodes[i], nodes[j]) / scale;
+          if (d > maxGeoDistance) {
+            maxGeoDistance = d;
+          }
+        }
+      }
+
+      return {
+        adjacencyList,
+        parentTracker,
+        distances,
+        averageHops,
+        diameter: maxShortestPathHops,
+        maxGeoDistance: maxGeoDistance.toFixed(1),
+        resilience: resiliencePercentage.toFixed(1),
+        reachableCount: Object.keys(visited).length
+      };
+    }
+
+    // Set interactive path target on node click
+    function getShortestPath(targetId, parentTracker) {
+      if (parentTracker[targetId] === undefined && targetId !== 0) {
+        return []; 
+      }
+      let path = [];
+      let current = targetId;
+      while (current !== undefined) {
+        path.push(current);
+        current = parentTracker[current];
+      }
+      return path.reverse();
+    }
+
+    // Interactive Node Selection / Clicking Logic
+    canvas.addEventListener("click", function (event) {
+      if (viewMode === 'forest') return; // Click-to-path is disabled on macro view
+
+      const rect = canvas.getBoundingClientRect();
+      const clickX = ((event.clientX - rect.left) / rect.width) * canvas.width;
+      const clickY = ((event.clientY - rect.top) / rect.height) * canvas.height;
+
+      let closestNode = null;
+      let minDist = 15; 
+
+      networkNodes.forEach(node => {
+        let d = Math.hypot(node.x - clickX, node.y - clickY);
+        if (d < minDist) {
+          minDist = d;
+          closestNode = node;
+        }
+      });
+
+      if (closestNode) {
+        selectedTargetNodeId = closestNode.id;
+        const analysis = analyzeGraphStructure(networkNodes, networkLinks);
+        activePath = getShortestPath(selectedTargetNodeId, analysis.parentTracker);
+        
+        const pathLabel = document.getElementById("interactive-path-display");
+        if (activePath.length > 0) {
+          pathLabel.innerHTML = `Active Path to ID ${selectedTargetNodeId}: <span class="text-indigo-400 font-bold">${activePath.join(" → ")}</span> (${activePath.length - 1} hops)`;
+          triggerToast(`Tracing routing sequence to transponder Node ${selectedTargetNodeId}`);
+        } else {
+          pathLabel.innerHTML = `Target ID ${selectedTargetNodeId} is <span class="text-red-400 font-bold">isolated</span>! No link route found.`;
+          triggerToast(`Warning: Target Node ${selectedTargetNodeId} is structurally isolated!`);
+        }
+        renderCanvasGraphics();
+      }
+    });
+
+    function resetSelectedPath() {
+      selectedTargetNodeId = null;
+      activePath = [];
+      document.getElementById("interactive-path-display").innerText = "Target Node: Click node below to find path";
+      renderCanvasGraphics();
+      triggerToast("Interactive tracing path cleared.");
+    }
+
+    // Quick trigger actions
+    function triggerQuickFailure() {
+      const currentFailures = Number(document.getElementById("failures").value);
+      const val = Math.min(60, currentFailures + 5);
+      document.getElementById("failures").value = val;
+      updateVal('failures', '');
+      generateNetwork();
+      triggerToast("Simulated damage cascade on network transceivers.");
+    }
+
+    function resetFailures() {
+      document.getElementById("failures").value = 0;
+      updateVal('failures', '');
+      generateNetwork();
+      triggerToast("Simulation reset to perfect performance.");
+    }
+
+    // Canvas Graphics Pipeline Renderer
+    function renderCanvasGraphics() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (viewMode === 'local') {
+        renderLocalWorkspace();
+      } else {
+        renderForestMacroGrid();
+      }
+    }
+
+    // RENDER LOCAL SCALE WORKSPACE
+    function renderLocalWorkspace() {
+      // Render grid system for academic report presentation
+      ctx.strokeStyle = "#1e1e24";
+      ctx.lineWidth = 1;
+      const gridSize = 40;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw customizable Boundary Shape limit
+      ctx.strokeStyle = "rgba(79, 70, 229, 0.4)";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      drawBoundaryPath(ctx, canvas.width / 2, canvas.height / 2, params.boundaryShape, params.radius * scale);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw normal link edges
+      ctx.strokeStyle = "rgba(113, 113, 122, 0.25)";
+      ctx.lineWidth = 1.5;
+      networkLinks.forEach(([i, j]) => {
+        const nodeA = networkNodes[i];
+        const nodeB = networkNodes[j];
+        if (!nodeA || !nodeB) return;
+        if (activePath.length > 0) {
+          const uIdx = activePath.indexOf(nodeA.id);
+          const vIdx = activePath.indexOf(nodeB.id);
+          if (uIdx !== -1 && vIdx !== -1 && Math.abs(uIdx - vIdx) === 1) {
+            return; 
+          }
+        }
+        ctx.beginPath();
+        ctx.moveTo(nodeA.x, nodeA.y);
+        ctx.lineTo(nodeB.x, nodeB.y);
+        ctx.stroke();
+      });
+
+      // Highlight routing path
+      if (activePath.length > 1) {
+        ctx.strokeStyle = "#4f46e5"; 
+        ctx.lineWidth = 4;
+        ctx.shadowColor = "#4f46e5";
+        ctx.shadowBlur = 8;
+        
+        for (let i = 0; i < activePath.length - 1; i++) {
+          const u = networkNodes.find(n => n.id === activePath[i]);
+          const v = networkNodes.find(n => n.id === activePath[i + 1]);
+          if (u && v) {
+            ctx.beginPath();
+            ctx.moveTo(u.x, u.y);
+            ctx.lineTo(v.x, v.y);
+            ctx.stroke();
+          }
+        }
+        ctx.shadowBlur = 0;
+        ctx.lineWidth = 1;
+      }
+
+      // Render physical nodes
+      networkNodes.forEach(node => {
+        ctx.beginPath();
+        const isRoot = node.id === 0;
+        const isTarget = node.id === selectedTargetNodeId;
+        const partOfPath = activePath.includes(node.id);
+        
+        ctx.arc(node.x, node.y, isRoot ? 8 : (isTarget ? 7 : 4.5), 0, Math.PI * 2);
+        
+        if (isRoot) {
+          ctx.fillStyle = "#ef4444"; 
+        } else if (isTarget) {
+          ctx.fillStyle = "#f59e0b"; 
+        } else if (partOfPath) {
+          ctx.fillStyle = "#818cf8"; 
+        } else {
+          ctx.fillStyle = "#3f51b5"; 
+        }
+        ctx.fill();
+
+        ctx.strokeStyle = isRoot ? "#fee2e2" : "#18181b";
+        ctx.lineWidth = isRoot ? 2 : 1;
+        ctx.stroke();
+
+        if (isRoot) {
+          ctx.font = "bold 9px monospace";
+          ctx.fillStyle = "#fca5a5";
+          ctx.fillText("GW (0)", node.x + 12, node.y + 3);
+        } else if (isTarget) {
+          ctx.font = "bold 9px monospace";
+          ctx.fillStyle = "#fcd34d";
+          ctx.fillText(`Target (${node.id})`, node.x + 11, node.y + 3);
+        } else {
+          if (networkNodes.length < 80) {
+            ctx.font = "7px monospace";
+            ctx.fillStyle = "rgba(161, 161, 170, 0.7)";
+            ctx.fillText(node.id, node.x + 8, node.y + 2);
+          }
+        }
+      });
+    }
+
+    // RENDER 1000 KM² FOREST DEPLOYMENT SCENARIO
+    function renderForestMacroGrid() {
+      // Dimensions of forest terrain
+      const forestSideKm = Math.sqrt(params.forestArea); // side in km (e.g. 31.62 km for 1000 km²)
+      
+      // Let's draw forest background boundaries
+      const margin = 50;
+      const displaySize = Math.min(canvas.width, canvas.height) - (margin * 2);
+      
+      // Conversion: 1 km = displaySize / forestSideKm pixels
+      const kmToPx = displaySize / forestSideKm;
+      const startX = (canvas.width - displaySize) / 2;
+      const startY = (canvas.height - displaySize) / 2;
+
+      // Draw Forest boundaries (Green zone)
+      ctx.fillStyle = "rgba(16, 185, 129, 0.03)";
+      ctx.fillRect(startX, startY, displaySize, displaySize);
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.3)";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(startX, startY, displaySize, displaySize);
+
+      // Draw a subtle coordinate grid representing 5 km cells inside the forest
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.08)";
+      ctx.lineWidth = 1;
+      for (let dist = 5; dist < forestSideKm; dist += 5) {
+        let coord = startX + dist * kmToPx;
+        ctx.beginPath();
+        ctx.moveTo(coord, startY);
+        ctx.lineTo(coord, startY + displaySize);
+        ctx.stroke();
+
+        coord = startY + dist * kmToPx;
+        ctx.beginPath();
+        ctx.moveTo(startX, coord);
+        ctx.lineTo(startX + displaySize, coord);
+        ctx.stroke();
+      }
+
+      // Labels for borders
+      ctx.fillStyle = "#10b981";
+      ctx.font = "10px monospace";
+      ctx.fillText("0 km", startX - 10, startY - 10);
+      ctx.fillText(`${forestSideKm.toFixed(1)} km`, startX + displaySize - 20, startY - 10);
+      ctx.fillText(`${forestSideKm.toFixed(1)} km`, startX - 45, startY + displaySize + 5);
+
+      // Calculate cells with Packing algorithms
+      const clusterRadiusKm = params.radius; 
+      let centers = [];
+
+      if (params.tilingStrategy === 'hexagonal') {
+        const wSpace = Math.sqrt(3) * clusterRadiusKm;
+        const vSpace = 1.5 * clusterRadiusKm;
+
+        const maxRow = Math.ceil(forestSideKm / vSpace) + 1;
+        const maxCol = Math.ceil(forestSideKm / wSpace) + 1;
+
+        for (let r = 0; r <= maxRow; r++) {
+          for (let c = -1; c <= maxCol; c++) {
+            let xOffset = (r % 2 === 0) ? 0 : wSpace / 2;
+            let kmX = c * wSpace + xOffset;
+            let kmY = r * vSpace;
+
+            if (kmX >= -clusterRadiusKm * 0.5 && kmX <= forestSideKm + clusterRadiusKm * 0.5 &&
+                kmY >= -clusterRadiusKm * 0.5 && kmY <= forestSideKm + clusterRadiusKm * 0.5) {
+              centers.push({ x: kmX, y: kmY });
+            }
+          }
+        }
+      } else {
+        const spacing = clusterRadiusKm * Math.sqrt(2); 
+        const gridSteps = Math.ceil(forestSideKm / spacing);
+        
+        for (let r = 0; r <= gridSteps; r++) {
+          for (let c = 0; c <= gridSteps; c++) {
+            centers.push({
+              x: c * spacing,
+              y: r * spacing
+            });
+          }
+        }
+      }
+
+      // Simulate failures on macro level
+      let seededRandom = (function() {
+        let seed = 12345;
+        return function() {
+          let x = Math.sin(seed++) * 10000;
+          return x - Math.floor(x);
+        };
+      })();
+
+      const totalHubs = centers.length;
+      const hubsToFail = Math.min(params.failures, totalHubs - 1);
+      let failedIndices = new Set();
+      while (failedIndices.size < hubsToFail) {
+        let targetIdx = Math.floor(seededRandom() * totalHubs);
+        failedIndices.add(targetIdx);
+      }
+
+      const edgeServerKm = { x: forestSideKm / 2, y: 0 };
+      const edgeServerPx = {
+        x: startX + edgeServerKm.x * kmToPx,
+        y: startY
+      };
+
+      // Draw coverage boundary circles & transceivers
+      centers.forEach((center, index) => {
+        const pxX = startX + center.x * kmToPx;
+        const pxY = startY + center.y * kmToPx;
+        const isFailed = failedIndices.has(index);
+
+        ctx.beginPath();
+        ctx.arc(pxX, pxY, clusterRadiusKm * kmToPx, 0, Math.PI * 2);
+        ctx.fillStyle = isFailed ? "rgba(239, 68, 68, 0.02)" : "rgba(79, 70, 229, 0.04)";
+        ctx.fill();
+        ctx.strokeStyle = isFailed ? "rgba(239, 68, 68, 0.15)" : "rgba(79, 70, 229, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(pxX, pxY, 5, 0, Math.PI * 2);
+        ctx.fillStyle = isFailed ? "#ef4444" : "#4f46e5";
+        ctx.fill();
+        ctx.strokeStyle = "#18181b";
+        ctx.stroke();
+
+        ctx.font = "8px monospace";
+        ctx.fillStyle = isFailed ? "#fca5a5" : "#818cf8";
+        ctx.fillText(`C-${index}`, pxX + 8, pxY + 3);
+      });
+
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+      ctx.lineWidth = 1.5;
+      
+      let totalBackhaulDistanceKm = 0;
+      let activeConnections = 0;
+
+      centers.forEach((center, index) => {
+        if (failedIndices.has(index)) return;
+
+        let bestTarget = null;
+        let bestDist = Infinity;
+
+        const distToEdgeServer = Math.hypot(center.x - edgeServerKm.x, center.y - edgeServerKm.y);
+        if (distToEdgeServer < bestDist) {
+          bestDist = distToEdgeServer;
+          bestTarget = edgeServerKm;
+        }
+
+        centers.forEach((target, targetIndex) => {
+          if (index === targetIndex || failedIndices.has(targetIndex)) return;
+          if (target.y < center.y) { 
+            let d = Math.hypot(center.x - target.x, center.y - target.y);
+            if (d < bestDist && d <= clusterRadiusKm * 2.2) {
+              bestDist = d;
+              bestTarget = target;
+            }
+          }
+        });
+
+        if (bestTarget) {
+          totalBackhaulDistanceKm += bestDist;
+          activeConnections++;
+
+          const pxX = startX + center.x * kmToPx;
+          const pxY = startY + center.y * kmToPx;
+          const targetPxX = startX + bestTarget.x * kmToPx;
+          const targetPxY = startY + (bestTarget.y === undefined ? 0 : bestTarget.y) * kmToPx;
+
+          ctx.beginPath();
+          ctx.moveTo(pxX, pxY);
+          ctx.lineTo(targetPxX, targetPxY);
+          ctx.stroke();
+        }
+      });
+
+      // Render Region Base Uplink (Edge Server)
+      ctx.beginPath();
+      ctx.arc(edgeServerPx.x, edgeServerPx.y, 10, 0, Math.PI * 2);
+      ctx.fillStyle = "#fbbf24"; 
+      ctx.fill();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.lineWidth = 1;
+
+      ctx.font = "bold 9px monospace";
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillText("EDGE SERVER UPLINK (REGIONAL CORE)", edgeServerPx.x + 14, edgeServerPx.y + 13);
+
+      const localNodesCount = networkNodes.length; 
+      const activeClusters = totalHubs - hubsToFail;
+      const totalSensorsEst = activeClusters * localNodesCount;
+      const costEstimate = (totalHubs * 1500) + (totalSensorsEst * 85);
+
+      document.getElementById("forest-metric-clusters").innerText = totalHubs;
+      
+      const overlapWarning = document.getElementById("forest-metric-overlap-warning");
+      const packingEfficiency = params.tilingStrategy === 'hexagonal' ? "83.7%" : "78.5%";
+      overlapWarning.innerText = `Using optimal hex geometry • ${packingEfficiency} Packing Density`;
+      
+      document.getElementById("forest-metric-total-nodes").innerText = totalSensorsEst;
+      document.getElementById("forest-metric-gateways").innerText = activeClusters;
+      document.getElementById("forest-metric-backhaul").innerText = `${totalBackhaulDistanceKm.toFixed(1)} km`;
+      document.getElementById("forest-metric-cost").innerText = `$${costEstimate.toLocaleString()}`;
+    }
+
+    // Initialize/Regenerate Network Topography Process
+    function generateNetwork() {
+      const loader = document.getElementById("canvas-loading");
+      loader.classList.remove("hidden");
+      loader.classList.add("flex");
+
+      setTimeout(() => {
+        const selectedTopology = document.getElementById("topology").value;
+        const selectedBoundary = document.getElementById("boundaryShape") ? document.getElementById("boundaryShape").value : "Circle";
+        params.topology = selectedTopology;
+        params.boundaryShape = selectedBoundary;
+
+        const layout = getGeneratedLayout(
+          params.topology, 
+          params.boundaryShape,
+          params.radius, 
+          params.range, 
+          params.failures
+        );
+
+        networkNodes = layout.nodes;
+        networkLinks = layout.links;
+
+        // Perform statistical analysis on layout
+        const stats = analyzeGraphStructure(networkNodes, networkLinks);
+
+        // Update analytical readout components
+        document.getElementById("metric-nodes").innerText = networkNodes.length;
+        document.getElementById("metric-links").innerText = networkLinks.length;
+        document.getElementById("metric-diameter").innerText = stats.diameter;
+        document.getElementById("metric-avg-hops").innerText = stats.averageHops;
+        document.getElementById("metric-max-dist").innerText = `${stats.maxGeoDistance} km`;
+        
+        const resEl = document.getElementById("metric-resilience");
+        resEl.innerText = `${stats.resilience}%`;
+        if (Number(stats.resilience) < 50) {
+          resEl.className = "text-xl font-bold font-mono mt-0.5 text-red-500";
+        } else if (Number(stats.resilience) < 85) {
+          resEl.className = "text-xl font-bold font-mono mt-0.5 text-amber-500";
+        } else {
+          resEl.className = "text-xl font-bold font-mono mt-0.5 text-emerald-500";
+        }
+
+        // Re-evaluate path constraints if the selected target node changed
+        if (selectedTargetNodeId !== null) {
+          const exists = networkNodes.some(n => n.id === selectedTargetNodeId);
+          if (exists) {
+            activePath = getShortestPath(selectedTargetNodeId, stats.parentTracker);
+          } else {
+            selectedTargetNodeId = null;
+            activePath = [];
+            document.getElementById("interactive-path-display").innerText = "Target Node: Click node below to find path";
+          }
+        }
+
+        // Complete UI Render Cycle
+        renderCanvasGraphics();
+        
+        loader.classList.add("hidden");
+        loader.classList.remove("flex");
+      }, 50);
+    }
+
+    // Auto-analyze All Topologies Multi-Model engine
+    function compareAllTopologies() {
+      const list = ["Circle", "Square", "Hexagon", "Triangle", "Star", "Random", "ScaleFree"];
+      let results = {};
+
+      list.forEach(topo => {
+        const layout = getGeneratedLayout(topo, params.boundaryShape, params.radius, params.range, params.failures);
+        const stats = analyzeGraphStructure(layout.nodes, layout.links);
+        
+        let hopPenalty = stats.averageHops > 0 ? Number(stats.averageHops) : 10;
+        let densityValue = layout.nodes.length;
+        let score = (stats.resilience * 0.5) + (densityValue * 0.4) - (hopPenalty * 2);
+        score = Math.max(0, Math.min(100, score)).toFixed(1);
+
+        results[topo] = {
+          name: topo,
+          nodes: layout.nodes.length,
+          links: layout.links.length,
+          avgHops: stats.averageHops,
+          diameter: stats.diameter,
+          resilience: stats.resilience,
+          score: Number(score)
+        };
+      });
+
+      comparisonDataCache = results;
+      updateComparisonUI(results);
+      triggerToast("Cross-Topology evaluation metrics compiled!");
+    }
+
+    // Dynamically update comparison table UI & build recommendations
+    function updateComparisonUI(data) {
+      const tbody = document.getElementById("comparisonTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      const sorted = Object.values(data).sort((a, b) => b.score - a.score);
+
+      sorted.forEach((item, index) => {
+        const isSelected = item.name === params.topology;
+        const rowClass = isSelected 
+          ? "bg-indigo-950/40 border-l-4 border-l-indigo-500 font-semibold text-white" 
+          : "hover:bg-zinc-900/60 text-zinc-300";
+
+        tbody.innerHTML += `
+          <tr class="${rowClass} cursor-pointer transition" onclick="selectTopology('${item.name}')">
+            <td class="p-2.5 font-sans flex items-center gap-2">
+              <span class="text-zinc-500 text-[10px] w-4">${index + 1}</span>
+              ${item.name}
+              ${isSelected ? '<span class="text-[9px] bg-indigo-500/10 text-indigo-400 px-1 py-0.2 border border-indigo-500/25 rounded">Active</span>' : ''}
+            </td>
+            <td class="p-2.5 text-center">${item.nodes}</td>
+            <td class="p-2.5 text-center">${item.links}</td>
+            <td class="p-2.5 text-center">${item.avgHops}</td>
+            <td class="p-2.5 text-center">${item.diameter}</td>
+            <td class="p-2.5 text-center">${item.resilience}%</td>
+            <td class="p-2.5 text-right font-bold text-indigo-400">${item.score}</td>
+          </tr>
+        `;
+      });
+
+      const winner = sorted[0];
+      const textCard = document.getElementById("recommendationText");
+      textCard.innerHTML = `
+        Based on your current environment configuration (Radius: ${params.radius}km, TX Range: ${params.range}km, Failures: ${params.failures}), the 
+        <strong class="text-indigo-400">${winner.name} model</strong> ranks highest with an efficiency rating of 
+        <strong class="text-emerald-400">${winner.score} pts</strong>. It provides optimal link distribution and robust network connectivity under cascade node failures.
+      `;
+      document.getElementById("recommendationCard").classList.remove("hidden");
+
+      buildChartJS(sorted);
+    }
+
+    // Chart.js helper to configure graphics dashboard
+    function buildChartJS(sortedData) {
+      const chartCtx = document.getElementById("comparisonChart").getContext("2d");
+
+      if (comparisonChartInstance) {
+        comparisonChartInstance.destroy();
+      }
+
+      const labels = sortedData.map(d => d.name);
+      const scores = sortedData.map(d => d.score);
+      const resilience = sortedData.map(d => Number(d.resilience));
+
+      comparisonChartInstance = new Chart(chartCtx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Overall Performance Index',
+              data: scores,
+              backgroundColor: 'rgba(79, 70, 229, 0.75)',
+              borderColor: 'rgba(99, 102, 241, 1)',
+              borderWidth: 1,
+              barThickness: 16
+            },
+            {
+              label: 'Resilience Factor %',
+              data: resilience,
+              backgroundColor: 'rgba(16, 185, 129, 0.25)',
+              borderColor: 'rgba(16, 185, 129, 0.7)',
+              borderWidth: 1,
+              barThickness: 10,
+              type: 'line'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 110,
+              grid: { color: 'rgba(63, 63, 70, 0.2)' },
+              ticks: { color: '#a1a1aa', font: { size: 9, family: 'monospace' } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#a1a1aa', font: { size: 9, family: 'monospace' } }
+            }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#d4d4d8',
+                boxWidth: 12,
+                font: { size: 9, family: 'sans-serif' }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#18181b',
+              titleColor: '#ffffff',
+              bodyColor: '#a1a1aa',
+              borderColor: '#3f3f46',
+              borderWidth: 1
+            }
+          }
+        }
+      });
+    }
+
+    // Switch selection inside dashboard trigger
+    function selectTopology(name) {
+      document.getElementById("topology").value = name;
+      generateNetwork();
+      if (Object.keys(comparisonDataCache).length > 0) {
+        updateComparisonUI(comparisonDataCache);
+      }
+      triggerToast(`Loaded active viewport topology: ${name}`);
+    }
+
+    // Export complete topology structural & computational state to raw research JSON
+    function exportJSON() {
+      const stats = analyzeGraphStructure(networkNodes, networkLinks);
+      
+      const exportedPayload = {
+        meta: {
+          app: "NetTopology Mesh Analyser v3.5",
+          timestamp: new Date().toISOString(),
+          scale: viewMode,
+          parameters: {
+            radiusKm: params.radius,
+            transmissionRangeLimitKm: params.range,
+            activeFailuresSimulated: params.failures,
+            selectedTopologyModel: params.topology,
+            selectedBoundaryShape: params.boundaryShape,
+            forestAreaTotalKm2: params.forestArea,
+            tilingAlgorithm: params.tilingStrategy
+          }
+        },
+        activeNetworkLayout: {
+          nodes: networkNodes.map(n => ({ id: n.id, xKm: ((n.x - canvas.width / 2) / scale).toFixed(2), yKm: ((n.y - canvas.height / 2) / scale).toFixed(2) })),
+          links: networkLinks.map(([i, j]) => ({ sourceId: networkNodes[i].id, targetId: networkNodes[j].id }))
+        },
+        computedMetrics: {
+          totalNodes: networkNodes.length,
+          totalEdges: networkLinks.length,
+          averageHopCount: stats.averageHops,
+          networkDiameter: stats.diameter,
+          maxGeographicSpanKm: stats.maxGeoDistance,
+          networkResiliencePercentage: stats.resilience,
+          reachableNodesFromGatewayCount: stats.reachableCount
+        },
+        crossComparisonMatrix: comparisonDataCache
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportedPayload, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mesh_network_${viewMode}_${params.topology.toLowerCase()}_research.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      triggerToast("Structural schema exported successfully to JSON.");
+    }
+
+    // Info modals logic
+    function alertDetails() {
+      const content = `
+        <p class="font-semibold text-indigo-400">Network Topology Metrics Reference Manual</p>
+        <p><strong>1. Average Hop Count:</strong> Computes the mean value of the shortest routes (Dijkstra paths) connecting every possible active node pair. Indication of transport latency efficiency.</p>
+        <p><strong>2. Network Diameter:</strong> The maximum shortest path step count between any two nodes. Represents worst-case delivery delays across boundaries.</p>
+        <p><strong>3. Partition Resilience Index:</strong> Calculated by dividing the size of the single largest remaining linked cluster by the total node count. A score close to 100% means the network is safe from partitioning failures.</p>
+        <p><strong>4. Adaptive Boundary Shapes:</strong> Re-calculates and constraints topologies inside custom spatial envelopes (Circle, Square, Hexagon, Triangle, and multi-lobed Irregular boundaries) to simulate varying geographic barriers.</p>
+      `;
+      showModal("Analytical Definitions & Formulas", content);
+    }
+
+    function alertJSONFormat() {
+      const content = `
+        <p class="font-semibold text-emerald-400">Export Schema Details</p>
+        <p>Export files conform to standard academic simulation formats. The exported properties include:</p>
+        <pre class="bg-zinc-950 p-2.5 rounded text-[10px] font-mono text-zinc-400 border border-zinc-800 overflow-x-auto">
+{
+  "meta": { "app": "NetTopology Mesh Analyser", "parameters": {} },
+  "activeNetworkLayout": {
+    "nodes": [{"id": 0, "xKm": "0.00", "yKm": "0.00"}],
+    "links": [{"sourceId": 0, "targetId": 1}]
+  },
+  "computedMetrics": {
+    "averageHopCount": "2.14",
+    "networkDiameter": 4
+  }
+}
+        </pre>
+        <p class="text-[11px] text-zinc-500">Perfect for analytical processing in Python Pandas, NetworkX, or MATLAB setups.</p>
+      `;
+      showModal("JSON Export Structure & Usage", content);
+    }
+
+    // Set canvas resolution for crisp display on high density panels
+    function initCanvasResolution() {
+      const width = 800;
+      const height = 600;
+      canvas.width = width;
+      canvas.height = height;
+    }
+
+    // Startup configuration
+    window.onload = function() {
+      initCanvasResolution();
+      updateVal('radius', 'km');
+      updateVal('range', 'km');
+      updateVal('failures', '');
+      
+      // Initialize forest specific display variables
+      if(document.getElementById("forestArea")) {
+        updateVal('forestArea', 'km²');
+      }
+
+      generateNetwork();
+      compareAllTopologies();
+    };
+  </script>
+</body>
+</html>
